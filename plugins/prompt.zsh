@@ -11,27 +11,34 @@ git_prompt() {
   cyan="\033[1m\e[36m"
   white="\033[1m\e[97m"
 
-  head=$(git_head)
-
-  # Not in a git repo
-  if [ -z "$head" ]; then
-    echo "%{$red%}%n@%m%{$normal%} %{$blue%}%c%{$normal%} "
-    return
+  if [[ $(whoami) == "root" ]]; then
+    user="%{$red%}%n@%m%{$normal%} "
+  else
+    user="%{$magenta%}%n@%m%{$normal%} "
   fi
 
-  # Check status, yellow = dirty, red = conflict, green = clean
-  if [ ! -z "$(exec git status -z --porcelain --ignore-submodules=dirty 2> /dev/null | tail -n1)" ]; then
-    if [ ! -z "$(git ls-files -u 2> /dev/null)" ]; then
-        color="%{$red%}"
+  head=$(git_head)
+
+  # In a git repo
+  if [ ! -z "$head" ]; then
+    # Check status, yellow = dirty, red = conflict, green = clean
+    if [ ! -z "$(exec git status -z --porcelain --ignore-submodules=dirty 2> /dev/null | tail -n1)" ]; then
+      if [ ! -z "$(git ls-files -u 2> /dev/null)" ]; then
+          color="%{$red%}"
+      else
+          color="%{$yellow%}"
+      fi
     else
-        color="%{$yellow%}"
+      color="%{$green%}"
     fi
+
+    branch="$color$head%{$normal%} "
   else
-    color="%{$green%}"
+    branch=""
   fi
 
   # user@hostname ~ master
-  echo "%{$red%}%n@%m%{$normal%} %{$blue%}%c%{$normal%} $color$head%{$normal%} "
+  echo "$user%{$blue%}%c%{$normal%} $branch"
 }
 
 find-up () {
